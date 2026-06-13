@@ -1,0 +1,16 @@
+{
+  "name": "Draetande — D&D 5e",
+  "short_name": "Draetande",
+  "description": "D&D 5e Character Sheet for the Draetande campaign",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0f14",
+  "theme_color": "#16213e",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [],
+  "categories": ["games", "utilities"]
+}
