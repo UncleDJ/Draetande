@@ -5,6 +5,16 @@
   padding-bottom: calc(64px + var(--safe-bottom));
   padding-top: var(--safe-top);
 }
+
+/* iOS PWA standalone mode often reports safe-area-inset-top as 0 on first
+   paint or doesn't apply it consistently to scrolling containers. Force a
+   minimum top padding when running as an installed app. */
+@media all and (display-mode: standalone) {
+  .page-content {
+    padding-top: max(var(--safe-top), 44px);
+  }
+}
+
 /* Desktop layout */
 @media (min-width: 768px) {
   .page-content { max-width: 900px; margin: 0 auto; width: 100%; }
