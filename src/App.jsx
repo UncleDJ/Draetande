@@ -53,7 +53,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (session?.user) loadProfile(session.user.id);
+    if (!session?.user) return;
+    loadProfile(session.user.id);
+
+    // Re-fetch profile when it changes (e.g. DM approval)
+    const sub = supabase
+      .channel('profile-changes')
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `user_id=eq.${session.user.id}` },
+        () => loadProfile(session.user.id)
+      )
+      .subscribe();
+
+    return () => sub.unsubscribe();
   }, [session?.user?.id]);
 
   if (authLoading) {
