@@ -93,7 +93,7 @@ export default function App() {
 
         {/* Header */}
         <div style={{
-          padding:'10px 14px 8px',
+          padding:'calc(env(safe-area-inset-top, 44px) + 10px) 14px 8px',
           background:'var(--c-surface)',
           borderBottom:'1px solid var(--c-border-gold)',
           display:'flex', alignItems:'center', justifyContent:'space-between',
@@ -144,7 +144,7 @@ export default function App() {
     return (
       <div className="app">
         <div style={{
-          padding:'10px 14px 8px',
+          padding:'calc(env(safe-area-inset-top, 44px) + 10px) 14px 8px',
           background:'var(--c-surface)',
           borderBottom:'1px solid var(--c-border-gold)',
           display:'flex', alignItems:'center', justifyContent:'space-between',
