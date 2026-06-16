@@ -66,7 +66,7 @@ h3 { font-size: clamp(0.9rem, 2.5vw, 1.1rem); }
 .card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); overflow: hidden; }
 .card-body { padding: 12px; }
 
-input, textarea, select {
+input:not([type="checkbox"]), textarea, select {
   font-family: var(--font-body); font-size: 0.95rem;
   background: var(--c-surface-3); border: 1px solid var(--c-border);
   color: var(--c-text); border-radius: var(--radius-sm);
@@ -74,7 +74,13 @@ input, textarea, select {
   transition: border-color var(--transition), box-shadow var(--transition);
   -webkit-appearance: none;
 }
-input:focus, textarea:focus, select:focus {
+
+input[type="checkbox"] {
+  width: 20px; height: 20px;
+  accent-color: var(--c-gold);
+  cursor: pointer;
+}
+input:not([type="checkbox"]):focus, textarea:focus, select:focus {
   outline: none; border-color: var(--c-gold-dim);
   box-shadow: 0 0 0 2px rgba(200,169,81,0.15);
 }
