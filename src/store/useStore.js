@@ -316,7 +316,12 @@ export const useStore = create((set, get) => ({
   resolveRequest: async (requestId, userId, approve) => {
     const { error } = await resolveDMRequest(requestId, userId, approve);
     if (!error) {
-      set(state => ({ pendingDMRequests: state.pendingDMRequests.filter(r => r.id !== requestId) }));
+      set(state => ({
+        pendingDMRequests: state.pendingDMRequests.filter(r => r.id !== requestId),
+      }));
+      // Refresh approved DMs list so the newly approved person appears
+      const { data } = await getApprovedDMs();
+      set({ approvedDMs: data || [] });
     }
     return { error };
   },
