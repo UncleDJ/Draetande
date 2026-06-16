@@ -70,6 +70,30 @@ function DiceRoller({ hd, conMod, onConfirm }) {
   );
 }
 
+function ManualHP({ hd, conMod, onConfirm }) {
+  const [hp, setHp] = useState('');
+  const avg = Math.floor(hd / 2) + 1;
+  const val = parseInt(hp);
+  const valid = !isNaN(val) && val > 0;
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:10, padding:12, background:'var(--c-surface-2)', borderRadius:'var(--radius-md)', border:'1px solid var(--c-border-gold)' }}>
+      <div style={{ textAlign:'center', fontSize:'0.85rem', color:'var(--c-text-dim)' }}>
+        Enter HP gained for this level (roll 1d{hd} + {fmtMod(conMod)} CON yourself)
+      </div>
+      <input type="number" inputMode="numeric" value={hp} onChange={e=>setHp(e.target.value)}
+        placeholder={`e.g. ${avg + conMod}`} autoFocus
+        style={{ textAlign:'center', fontFamily:'var(--font-mono)', fontSize:'1.5rem' }} />
+      <button className="btn btn-primary" disabled={!valid}
+        onClick={() => onConfirm(Math.max(1, val))}>
+        ✓ Confirm {valid ? `+${Math.max(1, val)} HP` : 'HP'}
+      </button>
+      <button className="btn btn-ghost" onClick={() => onConfirm(Math.max(1, avg + conMod))}>
+        Take Average ({Math.max(1, avg + conMod)})
+      </button>
+    </div>
+  );
+}
+
 export default function LevelUpTab() {
   const { character: char, setField } = useStore();
   const [showRoller, setShowRoller] = useState(false);
@@ -125,6 +149,7 @@ export default function LevelUpTab() {
           </div>
 
           {/* XP bar */}
+          {!char.hide_xp && (
           <div style={{ marginTop:16 }}>
             <div style={{ display:'flex', justifyContent:'space-between', fontSize:'0.75rem', color:'var(--c-text-dim)', marginBottom:4 }}>
               <span>XP: {currentXP.toLocaleString()}</span>
@@ -137,6 +162,7 @@ export default function LevelUpTab() {
               {Math.max(0, nextLevelXP - currentXP).toLocaleString()} XP to level {Math.min(20, nextLevel)}
             </div>
           </div>
+          )}
         </div>
       </div>
 
@@ -214,11 +240,13 @@ export default function LevelUpTab() {
             )}
 
             {showRoller ? (
-              <DiceRoller hd={cls?.hd || 8} conMod={conMod} onConfirm={handleLevelUp} />
+              char.manual_hp_levelup
+                ? <ManualHP hd={cls?.hd || 8} conMod={conMod} onConfirm={handleLevelUp} />
+                : <DiceRoller hd={cls?.hd || 8} conMod={conMod} onConfirm={handleLevelUp} />
             ) : (
               <button className="btn btn-primary" style={{ padding:'14px', fontSize:'0.85rem' }}
                 onClick={() => setShowRoller(true)}>
-                🎲 Level Up → Roll HP
+                {char.manual_hp_levelup ? '⬆ Level Up → Enter HP' : '🎲 Level Up → Roll HP'}
               </button>
             )}
           </div>
