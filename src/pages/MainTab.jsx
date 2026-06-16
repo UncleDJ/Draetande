@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { CLASSES, RACES, ALIGNMENTS, BACKGROUNDS, DEITIES, SKILLS,
          getMod, fmtMod, getProfBonus, getClassResources, COINS } from '../data/gameData';
@@ -16,17 +17,55 @@ function Field({ label, children, style }) {
   );
 }
 
+// Number input that lets you fully clear the field while typing (mobile-friendly).
+// Shows empty instead of snapping to 0/min; commits the parsed value to the parent.
+function NumberInput({ value, onCommit, min, style, ...rest }) {
+  const [local, setLocal] = useState(String(value ?? ''));
+
+  // Keep local in sync when the external value changes (e.g. race bonus, reset)
+  useEffect(() => { setLocal(String(value ?? '')); }, [value]);
+
+  return (
+    <input
+      type="number"
+      inputMode="numeric"
+      value={local}
+      min={min}
+      onChange={e => {
+        setLocal(e.target.value);
+        if (e.target.value !== '') {
+          let n = parseInt(e.target.value);
+          if (!isNaN(n)) {
+            if (min !== undefined && n < min) n = min;
+            onCommit(n);
+          }
+        }
+      }}
+      onBlur={() => {
+        if (local === '' || isNaN(parseInt(local))) {
+          const fallback = min !== undefined ? min : 0;
+          setLocal(String(fallback));
+          onCommit(fallback);
+        }
+      }}
+      style={style}
+      {...rest}
+    />
+  );
+}
+
+
 function StatBlock({ stat, score, raceMod = 0, onScore }) {
   const total = (score || 0) + raceMod;
   const mod = getMod(total);
   return (
     <div className="stat-block">
       <span className="stat-label">{stat}</span>
-      <input
+      <NumberInput
         className="stat-input"
-        type="number" min="1" max="30"
-        value={score || ''}
-        onChange={e => onScore(parseInt(e.target.value) || 0)}
+        min={0}
+        value={score || 0}
+        onCommit={v => onScore(v)}
         style={{ width: '50px' }}
       />
       {raceMod !== 0 && (
@@ -71,18 +110,18 @@ function HPTracker({ char }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 12 }}>
         <div>
           <label>Max HP</label>
-          <input type="number" value={char.max_hp || ''} min="0"
-            onChange={e => { const v = parseInt(e.target.value)||0; setField('max_hp', v); setField('current_hp', Math.min(char.current_hp, v)); }} />
+          <NumberInput value={char.max_hp || 0} min={0}
+            onCommit={v => { setField('max_hp', v); setField('current_hp', Math.min(char.current_hp, v)); }} />
         </div>
         <div>
           <label>Current</label>
-          <input type="number" value={char.current_hp || ''} min="0" max={char.max_hp}
-            onChange={e => setField('current_hp', Math.min(parseInt(e.target.value)||0, char.max_hp))} />
+          <NumberInput value={char.current_hp || 0} min={0}
+            onCommit={v => setField('current_hp', Math.min(v, char.max_hp))} />
         </div>
         <div>
           <label>Temp HP</label>
-          <input type="number" value={char.temp_hp || ''} min="0"
-            onChange={e => setField('temp_hp', parseInt(e.target.value)||0)} />
+          <NumberInput value={char.temp_hp || 0} min={0}
+            onCommit={v => setField('temp_hp', v)} />
         </div>
       </div>
 
@@ -373,8 +412,11 @@ export default function MainTab() {
               </select>
             </Field>
             <Field label="Level">
-              <input type="number" min="1" max="20" value={char.level||1}
-                onChange={e=>setField('level',parseInt(e.target.value)||1)} />
+              <select value={char.level||1} onChange={e=>setField('level',parseInt(e.target.value))}>
+                {Array.from({length:20},(_, i)=>i+1).map(lvl=>(
+                  <option key={lvl} value={lvl}>{lvl}</option>
+                ))}
+              </select>
             </Field>
           </div>
           <div className="grid-2">
@@ -399,7 +441,7 @@ export default function MainTab() {
           </Field>
           <div className="grid-2">
             <Field label="Experience">
-              <input type="number" min="0" value={char.experience||0} onChange={e=>setField('experience',parseInt(e.target.value)||0)} />
+              <NumberInput min={0} value={char.experience||0} onCommit={v=>setField('experience',v)} />
             </Field>
             <Field label="Age / Height / Weight">
               <input value={char.age||''} onChange={e=>setField('age',e.target.value)} placeholder="Age, height, weight" />
@@ -422,7 +464,7 @@ export default function MainTab() {
               <div key={item.label} style={{ textAlign: 'center', background: 'var(--c-surface-2)', borderRadius: 'var(--radius-sm)', padding: '8px 4px', border: '1px solid var(--c-border)' }}>
                 <div style={{ fontSize: '0.55rem', fontFamily: 'var(--font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--c-text-muted)', marginBottom: 2 }}>{item.label}</div>
                 {item.editable
-                  ? <input type="number" value={char[item.field]||0} onChange={e=>setField(item.field, parseInt(e.target.value)||0)}
+                  ? <NumberInput min={0} value={char[item.field]||0} onCommit={v=>setField(item.field, v)}
                       style={{ textAlign:'center', background:'transparent', border:'none', fontFamily:'var(--font-mono)', fontSize:'1.3rem', color:'var(--c-text)', padding:0, width:'100%' }} />
                   : <div style={{ fontFamily:'var(--font-mono)', fontSize:'1.3rem', color:'var(--c-text)' }}>{item.value}</div>
                 }
@@ -536,8 +578,8 @@ export default function MainTab() {
             {COINS.map(coin => (
               <div key={coin} style={{ textAlign:'center' }}>
                 <label>{coin}</label>
-                <input type="number" min="0" value={char[coin.toLowerCase()]||0}
-                  onChange={e=>setField(coin.toLowerCase(), parseInt(e.target.value)||0)}
+                <NumberInput min={0} value={char[coin.toLowerCase()]||0}
+                  onCommit={v=>setField(coin.toLowerCase(), v)}
                   style={{ textAlign:'center', fontFamily:'var(--font-mono)' }} />
               </div>
             ))}
