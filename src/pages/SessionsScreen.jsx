@@ -317,7 +317,7 @@ export default function SessionsScreen() {
         )}
       </div>
 
-      {profile?.is_approved_dm && <DMRequestsPanel />}
+      {user?.id === '2eb0738a-15c4-44f2-a879-4f0262ad9161' && <DMRequestsPanel />}
       {!profile?.is_approved_dm && <RequestDMCard />}
 
       <div className="divider">My Sessions</div>
