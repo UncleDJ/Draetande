@@ -21,7 +21,7 @@ export const useStore = create((set, get) => ({
   // ── Auth ───────────────────────────────────────────────────────────────────
   session: null,
   user: null,
-  profile: null,        // { user_id, player_name, is_approved_dm }
+  profile: null,
   setSession: (session) => {
     set({ session, user: session?.user ?? null });
   },
@@ -33,10 +33,9 @@ export const useStore = create((set, get) => ({
   },
 
   // ── Navigation ─────────────────────────────────────────────────────────────
-  // screen: 'home' | 'characters' | 'sheet' | 'sessions' | 'session-lobby'
   screen: 'home',
   setScreen: (screen) => set({ screen }),
-  activeTab: 'main',   // within the character sheet: 'main' | 'spells' | 'library' | 'levelup' | 'party'
+  activeTab: 'main',
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   // ── Character Library ─────────────────────────────────────────────────────
@@ -67,7 +66,7 @@ export const useStore = create((set, get) => ({
     return { error };
   },
 
-  // ── Active Character (the sheet currently open) ──────────────────────────────
+  // ── Active Character ────────────────────────────────────────────────────────
   character: null,
   characterLoading: false,
   characterError: null,
@@ -90,10 +89,8 @@ export const useStore = create((set, get) => ({
     const char = get().character;
     if (!char?.id) return;
     charRealtimeSub = subscribeToCharacter(char.id, (payload) => {
-      // Only apply remote updates if they're newer and we're not mid-edit
       if (payload.eventType === 'UPDATE' && payload.new) {
         set(state => {
-          // Don't clobber local unsaved edits within the debounce window
           if (saveTimer) return state;
           return { character: payload.new };
         });
@@ -101,7 +98,6 @@ export const useStore = create((set, get) => ({
     });
   },
 
-  // Update a field locally and debounce save to Supabase
   setField: (field, value) => {
     set(state => ({
       character: { ...state.character, [field]: value }
@@ -134,14 +130,12 @@ export const useStore = create((set, get) => ({
     if (!char) return;
     const { data } = await upsertCharacter(char);
     if (data) {
-      // Sync myCharacters list entry too (for library view summaries)
       set(state => ({
         myCharacters: state.myCharacters.map(c => c.id === data.id ? data : c)
       }));
     }
   },
 
-  // HP shortcuts
   adjustHP: (delta) => {
     set(state => {
       const char = state.character;
@@ -151,7 +145,6 @@ export const useStore = create((set, get) => ({
     get().debouncedSave();
   },
 
-  // Spell slot management
   expendSlot: (slotLevel) => {
     set(state => {
       const expended = [...(state.character.slots_expended || [0,0,0,0,0,0,0,0,0])];
@@ -170,7 +163,6 @@ export const useStore = create((set, get) => ({
     get().debouncedSave();
   },
 
-  // Resource management
   useResource: (resourceName) => {
     set(state => {
       const used = { ...(state.character.resources_used || {}) };
@@ -218,7 +210,7 @@ export const useStore = create((set, get) => ({
   // ── Sessions ───────────────────────────────────────────────────────────────
   mySessions: [],
   mySessionsLoading: false,
-  activeSession: null,    // session currently being viewed (party/lobby)
+  activeSession: null,
 
   loadMySessions: async (userId) => {
     set({ mySessionsLoading: true });
@@ -241,7 +233,6 @@ export const useStore = create((set, get) => ({
   joinSessionWithCharacter: async (sessionId, characterId, userId) => {
     const { data, error } = await joinSession(sessionId, characterId, userId);
     if (!error) {
-      // Tag the character with this session for convenience
       set(state => ({
         myCharacters: state.myCharacters.map(c => c.id === characterId ? { ...c, session_id: sessionId } : c)
       }));
@@ -269,17 +260,15 @@ export const useStore = create((set, get) => ({
     if (membersRealtimeSub) membersRealtimeSub.unsubscribe();
     if (charsRealtimeSub) charsRealtimeSub.unsubscribe();
 
-    // Refresh party list when membership changes
     membersRealtimeSub = subscribeToSessionMembers(sessionId, () => {
       get().loadSessionParty(sessionId);
     });
 
-    // Update individual character data live
     charsRealtimeSub = subscribeToSessionCharacters(sessionId, (payload) => {
       if (payload.eventType === 'UPDATE' && payload.new) {
         set(state => {
           const idx = state.party.findIndex(c => c.id === payload.new.id);
-          if (idx < 0) return state; // not in this session's party
+          if (idx < 0) return state;
           const party = [...state.party];
           party[idx] = payload.new;
           return { party };
@@ -296,6 +285,7 @@ export const useStore = create((set, get) => ({
   // ── DM Requests / Approval ─────────────────────────────────────────────────
   myDMRequest: null,
   pendingDMRequests: [],
+  approvedDMs: [],
 
   loadMyDMRequest: async (userId) => {
     const { data } = await getMyDMRequest(userId);
@@ -313,24 +303,19 @@ export const useStore = create((set, get) => ({
     set({ pendingDMRequests: data || [] });
   },
 
+  loadApprovedDMs: async () => {
+    const { data } = await getApprovedDMs();
+    set({ approvedDMs: data || [] });
+  },
+
   resolveRequest: async (requestId, userId, approve) => {
     const { error } = await resolveDMRequest(requestId, userId, approve);
     if (!error) {
-      set(state => ({
-        pendingDMRequests: state.pendingDMRequests.filter(r => r.id !== requestId),
-      }));
-      // Refresh approved DMs list so the newly approved person appears
+      set(state => ({ pendingDMRequests: state.pendingDMRequests.filter(r => r.id !== requestId) }));
       const { data } = await getApprovedDMs();
       set({ approvedDMs: data || [] });
     }
     return { error };
-  },
-
-  approvedDMs: [],
-
-  loadApprovedDMs: async () => {
-    const { data } = await getApprovedDMs();
-    set({ approvedDMs: data || [] });
   },
 
   revokeDM: async (userId) => {
