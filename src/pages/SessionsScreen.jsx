@@ -115,7 +115,7 @@ function JoinCodeModal({ onJoin, onClose, error }) {
             placeholder="e.g. AB12CD" maxLength={6} autoFocus
             style={{ fontFamily:'var(--font-mono)', fontSize:'1.2rem', textAlign:'center', letterSpacing:'0.2em' }} />
         </div>
-        {error && <div className="badge badge-red" style={{ width:'100%', padding:'6px 10px' }}>{error}</div>}
+        {error && <div className="badge badge-red" style={{ width:'100%', padding:'calc(env(safe-area-inset-top, 44px) + 16px) 12px 16px' }}>{error}</div>}
         <button className="btn btn-primary" disabled={code.length < 4} onClick={() => onJoin(code)}>
           Find Session
         </button>
