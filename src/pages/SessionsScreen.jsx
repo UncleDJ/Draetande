@@ -21,19 +21,15 @@ function CharacterPickerModal({ onPick, onCreateNew, onClose }) {
         <p style={{ fontSize:'0.8rem', color:'var(--c-text-dim)' }}>
           Pick an existing character to bring into this session, or create a new one.
         </p>
-
         <button className="btn btn-primary" onClick={onCreateNew}>
           ＋ Create New Character
         </button>
-
         <div className="divider">or pick existing</div>
-
         {myCharacters.length === 0 && (
           <p style={{ textAlign:'center', color:'var(--c-text-muted)', fontStyle:'italic', padding:16 }}>
             You don't have any characters yet.
           </p>
         )}
-
         {myCharacters.map(char => (
           <button key={char.id} onClick={() => onPick(char.id)}
             className="card"
@@ -115,7 +111,7 @@ function JoinCodeModal({ onJoin, onClose, error }) {
             placeholder="e.g. AB12CD" maxLength={6} autoFocus
             style={{ fontFamily:'var(--font-mono)', fontSize:'1.2rem', textAlign:'center', letterSpacing:'0.2em' }} />
         </div>
-        {error && <div className="badge badge-red" style={{ width:'100%', padding:'calc(env(safe-area-inset-top, 44px) + 16px) 12px 16px' }}>{error}</div>}
+        {error && <div className="badge badge-red" style={{ width:'100%', padding:'6px 10px' }}>{error}</div>}
         <button className="btn btn-primary" disabled={code.length < 4} onClick={() => onJoin(code)}>
           Find Session
         </button>
@@ -127,11 +123,8 @@ function JoinCodeModal({ onJoin, onClose, error }) {
 // ── DM Requests panel ──────────────────────────────────────────────────────────
 function DMRequestsPanel() {
   const { pendingDMRequests, loadPendingDMRequests, resolveRequest } = useStore();
-
   useEffect(() => { loadPendingDMRequests(); }, []);
-
   if (pendingDMRequests.length === 0) return null;
-
   return (
     <div className="card" style={{ border:'1px solid var(--c-border-gold)' }}>
       <div className="section-header">⚜ Pending DM Requests</div>
@@ -181,13 +174,13 @@ export default function SessionsScreen() {
     user, profile, mySessions, mySessionsLoading, loadMySessions,
     createNewSession, findSessionByCode, joinSessionWithCharacter,
     createNewCharacter, openCharacter, myCharacters, loadMyCharacters,
-    setScreen, setActiveTab, activeSession,
+    setScreen, activeSession,
   } = useStore();
 
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [joinError, setJoinError] = useState('');
-  const [pendingJoinSession, setPendingJoinSession] = useState(null); // session found by code, awaiting char pick
+  const [pendingJoinSession, setPendingJoinSession] = useState(null);
   const [showCharPicker, setShowCharPicker] = useState(false);
 
   useEffect(() => {
@@ -201,7 +194,6 @@ export default function SessionsScreen() {
     const { data, error } = await createNewSession(name, user.id);
     setShowCreate(false);
     if (data) {
-      // Open as DM directly -> Party tab
       useStore.setState({ activeSession: data });
       setScreen('party');
     }
@@ -241,23 +233,23 @@ export default function SessionsScreen() {
   const handleOpenSession = (session) => {
     useStore.setState({ activeSession: session });
     if (session.dm_user_id === user.id) {
-      // DM -> party view
       setScreen('party');
     } else {
-      // Player -> if they have a character in this session, open it; else picker
       setPendingJoinSession(session);
       setShowCharPicker(true);
     }
   };
 
   return (
-    <div style={{ padding:'16px 12px', display:'flex', flexDirection:'column', gap:12 }}>
+    <div style={{
+      padding:'calc(env(safe-area-inset-top, 44px) + 16px) 12px 16px',
+      display:'flex', flexDirection:'column', gap:12,
+    }}>
       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
         <button className="btn btn-ghost btn-icon" onClick={() => setScreen('home')}>←</button>
         <h2 style={{ flex:1 }}>🎲 Sessions</h2>
       </div>
 
-      {/* Actions */}
       <div style={{ display:'flex', gap:8 }}>
         <button className="btn btn-secondary" style={{ flex:1 }} onClick={() => { setJoinError(''); setShowJoin(true); }}>
           🔑 Join by Code
@@ -269,13 +261,9 @@ export default function SessionsScreen() {
         )}
       </div>
 
-      {/* DM approval requests, if I'm an approved DM */}
       {profile?.is_approved_dm && <DMRequestsPanel />}
-
-      {/* Request DM access */}
       {!profile?.is_approved_dm && <RequestDMCard />}
 
-      {/* My sessions */}
       <div className="divider">My Sessions</div>
 
       {mySessionsLoading && (
@@ -294,7 +282,6 @@ export default function SessionsScreen() {
         <SessionCard key={session.id} session={session} isDM={session.dm_user_id === user.id} onOpen={handleOpenSession} />
       ))}
 
-      {/* Modals */}
       {showCreate && <CreateSessionModal onCreate={handleCreateSession} onClose={() => setShowCreate(false)} />}
       {showJoin && <JoinCodeModal onJoin={handleJoinByCode} onClose={() => setShowJoin(false)} error={joinError} />}
       {showCharPicker && (
@@ -311,7 +298,6 @@ export default function SessionsScreen() {
 // ── Request DM access card ───────────────────────────────────────────────────
 function RequestDMCard() {
   const { user, myDMRequest, loadMyDMRequest, requestToBeDM } = useStore();
-
   useEffect(() => { if (user?.id) loadMyDMRequest(user.id); }, [user?.id]);
 
   if (myDMRequest?.status === 'pending') {
