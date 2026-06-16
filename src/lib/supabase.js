@@ -206,6 +206,15 @@ export async function leaveSession(sessionId, characterId) {
   return { error };
 }
 
+export async function deleteSession(sessionId) {
+  // session_members rows cascade-delete via the FK constraint
+  const { error } = await supabase
+    .from('sessions')
+    .delete()
+    .eq('id', sessionId);
+  return { error };
+}
+
 export async function getSessionMembers(sessionId) {
   const { data, error } = await supabase
     .from('session_members')
