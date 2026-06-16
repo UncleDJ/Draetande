@@ -8,6 +8,7 @@ import {
   joinSession, leaveSession, getSessionMembers,
   subscribeToSessionMembers, subscribeToSessionCharacters,
   requestDMAccess, getMyDMRequest, getPendingDMRequests, resolveDMRequest,
+  revokeDMAccess, getApprovedDMs,
 } from '../lib/supabase';
 import { defaultCharacter } from '../data/gameData';
 
@@ -316,6 +317,23 @@ export const useStore = create((set, get) => ({
     const { error } = await resolveDMRequest(requestId, userId, approve);
     if (!error) {
       set(state => ({ pendingDMRequests: state.pendingDMRequests.filter(r => r.id !== requestId) }));
+    }
+    return { error };
+  },
+
+  approvedDMs: [],
+
+  loadApprovedDMs: async () => {
+    const { data } = await getApprovedDMs();
+    set({ approvedDMs: data || [] });
+  },
+
+  revokeDM: async (userId) => {
+    const { error } = await revokeDMAccess(userId);
+    if (!error) {
+      set(state => ({
+        approvedDMs: state.approvedDMs.filter(d => d.user_id !== userId),
+      }));
     }
     return { error };
   },
