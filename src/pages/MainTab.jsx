@@ -440,9 +440,11 @@ export default function MainTab() {
             </select>
           </Field>
           <div className="grid-2">
-            <Field label="Experience">
-              <NumberInput min={0} value={char.experience||0} onCommit={v=>setField('experience',v)} />
-            </Field>
+            {!char.hide_xp && (
+              <Field label="Experience">
+                <NumberInput min={0} value={char.experience||0} onCommit={v=>setField('experience',v)} />
+              </Field>
+            )}
             <Field label="Age / Height / Weight">
               <input value={char.age||''} onChange={e=>setField('age',e.target.value)} placeholder="Age, height, weight" />
             </Field>
@@ -604,6 +606,36 @@ export default function MainTab() {
                 placeholder={label} rows={field==='features_traits'||field==='equipment' ? 4 : 2} />
             </Field>
           ))}
+        </div>
+      </div>
+
+      {/* ── Sheet Settings ── */}
+      <div className="card">
+        <div className="section-header">⚙ Sheet Settings</div>
+        <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+          <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', textTransform:'none', fontFamily:'var(--font-body)', fontSize:'0.9rem', color:'var(--c-text)' }}>
+            <span>
+              Track Experience (XP)
+              <span style={{ display:'block', fontSize:'0.7rem', color:'var(--c-text-dim)' }}>
+                Show the XP field and level-up progress bar
+              </span>
+            </span>
+            <input type="checkbox" style={{ width:'auto', flexShrink:0 }}
+              checked={!char.hide_xp}
+              onChange={e=>setField('hide_xp', !e.target.checked)} />
+          </label>
+
+          <label style={{ display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer', textTransform:'none', fontFamily:'var(--font-body)', fontSize:'0.9rem', color:'var(--c-text)' }}>
+            <span>
+              Roll HP on level up
+              <span style={{ display:'block', fontSize:'0.7rem', color:'var(--c-text-dim)' }}>
+                Off = enter HP gain manually instead of rolling
+              </span>
+            </span>
+            <input type="checkbox" style={{ width:'auto', flexShrink:0 }}
+              checked={!char.manual_hp_levelup}
+              onChange={e=>setField('manual_hp_levelup', !e.target.checked)} />
+          </label>
         </div>
       </div>
 
