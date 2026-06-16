@@ -68,7 +68,7 @@ export default function CharacterLibrary() {
   };
 
   return (
-    <div style={{ padding:'16px 12px', display:'flex', flexDirection:'column', gap:12 }}>
+    <div style={{ padding:'calc(env(safe-area-inset-top, 44px) + 16px) 12px 16px', display:'flex', flexDirection:'column', gap:12 }}>
       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
         <button className="btn btn-ghost btn-icon" onClick={() => setScreen('home')}>←</button>
         <h2 style={{ flex:1 }}>📋 My Characters</h2>
