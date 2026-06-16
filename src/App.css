@@ -1,0 +1,20 @@
+/* App-level layout */
+.app { display: flex; flex-direction: column; height: 100%; }
+.page-content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding-bottom: calc(64px + var(--safe-bottom));
+  padding-top: var(--safe-top);
+}
+
+/* iOS PWA standalone mode — force minimum top padding to clear status bar/Dynamic Island */
+@media all and (display-mode: standalone) {
+  .page-content {
+    padding-top: max(var(--safe-top), 59px);
+  }
+}
+
+/* Desktop layout */
+@media (min-width: 768px) {
+  .page-content { max-width: 900px; margin: 0 auto; width: 100%; }
+  .bottom-nav { max-width: 900px; left: 50%; transform: translateX(-50%); }
+}
