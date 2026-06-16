@@ -33,7 +33,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <div style={{ padding:'24px 16px', display:'flex', flexDirection:'column', gap:16 }}>
+    <div style={{ padding:'calc(env(safe-area-inset-top, 44px) + 24px) 16px 24px', display:'flex', flexDirection:'column', gap:16 }}>
       {/* Hero */}
       <div style={{ textAlign:'center', marginBottom:8 }}>
         <div style={{ fontSize:'2.5rem', marginBottom:8, filter:'drop-shadow(0 0 12px rgba(200,169,81,0.4))' }}>⚔</div>
