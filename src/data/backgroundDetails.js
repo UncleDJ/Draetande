@@ -1,0 +1,31 @@
+// Background reference. Keyed by background name -> { link, skills, feature:{name, summary} }
+const SRD = 'https://dnd5e.wikidot.com';
+
+export const BACKGROUND_DETAILS = {
+  'Acolyte': { link:`${SRD}/acolyte`, skills:'Insight, Religion',
+    feature:{ name:'Shelter of the Faithful', summary:'You and your companions can receive free healing and care at temples of your faith, and you have ties to a religious community.' } },
+  'Charlatan': { link:`${SRD}/charlatan`, skills:'Deception, Sleight of Hand',
+    feature:{ name:'False Identity', summary:'You have a second persona with documentation and contacts, and can forge papers and mimic handwriting.' } },
+  'Criminal': { link:`${SRD}/criminal`, skills:'Deception, Stealth',
+    feature:{ name:'Criminal Contact', summary:'You have a reliable contact in the criminal underworld and know how to get messages to and from them.' } },
+  'Entertainer': { link:`${SRD}/entertainer`, skills:'Acrobatics, Performance',
+    feature:{ name:'By Popular Demand', summary:'You can find a place to perform for food and lodging, and are recognized and welcomed by audiences who enjoy your work.' } },
+  'Folk Hero': { link:`${SRD}/folk-hero`, skills:'Animal Handling, Survival',
+    feature:{ name:'Rustic Hospitality', summary:'Common folk shelter and hide you (short of risking their lives) because you are one of them.' } },
+  'Guild Artisan': { link:`${SRD}/guild-artisan`, skills:'Insight, Persuasion',
+    feature:{ name:'Guild Membership', summary:'Your guild provides lodging, contacts, and political/legal support in exchange for dues.' } },
+  'Hermit': { link:`${SRD}/hermit`, skills:'Medicine, Religion',
+    feature:{ name:'Discovery', summary:'During your seclusion you discovered a unique and powerful truth, secret, or insight.' } },
+  'Noble': { link:`${SRD}/noble`, skills:'History, Persuasion',
+    feature:{ name:'Position of Privilege', summary:'People assume you have the right to be where you are; you are welcome in high society and can secure audiences.' } },
+  'Outlander': { link:`${SRD}/outlander`, skills:'Athletics, Survival',
+    feature:{ name:'Wanderer', summary:'Excellent memory for geography; you can always find food and water in the wild for yourself and up to five others.' } },
+  'Sage': { link:`${SRD}/sage`, skills:'Arcana, History',
+    feature:{ name:'Researcher', summary:'When you don\'t know a piece of lore, you often know where and from whom you can find it.' } },
+  'Sailor': { link:`${SRD}/sailor`, skills:'Athletics, Perception',
+    feature:{ name:'Ship\'s Passage', summary:'You can secure free passage on a sailing ship for yourself and companions, working your way across.' } },
+  'Soldier': { link:`${SRD}/soldier`, skills:'Athletics, Intimidation',
+    feature:{ name:'Military Rank', summary:'Soldiers loyal to your former organization recognize your authority and defer to it; you can invoke your rank for access.' } },
+  'Urchin': { link:`${SRD}/urchin`, skills:'Sleight of Hand, Stealth',
+    feature:{ name:'City Secrets', summary:'You know the secret patterns of cities and can travel between any two locations twice as fast through back ways.' } },
+};

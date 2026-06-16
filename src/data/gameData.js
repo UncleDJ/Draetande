@@ -818,6 +818,7 @@ export function defaultCharacter(userId, campaignId) {
     languages: ['Common'],
     // Player notes (freeform, persistent)
     game_notes: '',
+    subclass: '',
     // Feature toggles (per-character preferences)
     hide_xp: false,
     manual_hp_levelup: false,
