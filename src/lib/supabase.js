@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-// These will be replaced with real values during deployment
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder-key';
 
@@ -97,7 +96,6 @@ export function subscribeToCharacter(characterId, callback) {
 }
 
 export function subscribeToSessionCharacters(sessionId, callback) {
-  // Subscribe to all character changes; the caller filters by session membership
   return supabase
     .channel(`session-chars-${sessionId}`)
     .on('postgres_changes',
@@ -136,7 +134,7 @@ export async function getAllProfiles() {
 
 // ── Sessions ───────────────────────────────────────────────────────────────────
 function generateJoinCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
   return code;
@@ -153,14 +151,12 @@ export async function createSession(name, dmUserId) {
 }
 
 export async function getMySessions(userId) {
-  // Sessions I DM
   const { data: dmSessions, error: dmErr } = await supabase
     .from('sessions')
     .select('*')
     .eq('dm_user_id', userId)
     .eq('active', true);
 
-  // Sessions I've joined as a player
   const { data: memberRows, error: memErr } = await supabase
     .from('session_members')
     .select('session_id, sessions(*)')
@@ -170,7 +166,6 @@ export async function getMySessions(userId) {
     .map(r => r.sessions)
     .filter(s => s && s.active);
 
-  // Dedupe
   const all = [...(dmSessions || [])];
   joinedSessions.forEach(s => { if (!all.find(a => a.id === s.id)) all.push(s); });
 
@@ -216,7 +211,7 @@ export async function getSessionMembers(sessionId) {
 
 // ── DM Requests ──────────────────────────────────────────────────────────────
 export async function requestDMAccess(userId) {
-  // Delete any existing request first, then create fresh
+  // Delete any existing request first, then create fresh so re-requesting works
   await supabase
     .from('dm_requests')
     .delete()
@@ -246,7 +241,7 @@ export async function getPendingDMRequests() {
     .eq('status', 'pending');
   if (error || !data) return { data, error };
 
-  // Fetch player names separately
+  // Fetch player names separately (avoids needing a declared FK relationship)
   const userIds = data.map(r => r.user_id);
   const { data: profiles } = await supabase
     .from('profiles')
@@ -279,6 +274,22 @@ export async function resolveDMRequest(requestId, userId, approve) {
   return { error: null };
 }
 
+export async function revokeDMAccess(userId) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_approved_dm: false })
+    .eq('user_id', userId);
+  return { error };
+}
+
+export async function getApprovedDMs() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, player_name')
+    .eq('is_approved_dm', true);
+  return { data, error };
+}
+
 // ── Custom Spells ────────────────────────────────────────────────────────────
 export async function getMyCustomSpells(userId) {
   const { data, error } = await supabase
@@ -305,20 +316,4 @@ export async function deleteCustomSpell(spellId) {
     .delete()
     .eq('id', spellId);
   return { error };
-}
-
-export async function revokeDMAccess(userId) {
-  const { error } = await supabase
-    .from('profiles')
-    .update({ is_approved_dm: false })
-    .eq('user_id', userId);
-  return { error };
-}
-
-export async function getApprovedDMs() {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('user_id, player_name')
-    .eq('is_approved_dm', true);
-  return { data, error };
 }
