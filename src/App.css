@@ -9,7 +9,7 @@
 /* iOS PWA standalone mode — force minimum top padding to clear status bar/Dynamic Island */
 @media all and (display-mode: standalone) {
   .page-content {
-    padding-top: max(var(--safe-top), 59px);
+    padding-top: max(var(--safe-top), 80px);
   }
 }
 
