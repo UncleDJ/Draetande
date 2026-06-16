@@ -151,27 +151,60 @@ function DMRequestsPanel() {
 }
 
 // ── Session card ──────────────────────────────────────────────────────────────
-function SessionCard({ session, isDM, onOpen }) {
+function SessionCard({ session, isDM, onOpen, onDelete }) {
   return (
-    <button onClick={() => onOpen(session)}
-      className="card"
+    <div className="card"
       style={{
-        display:'flex', alignItems:'center', gap:12, padding:14,
+        display:'flex', alignItems:'center', gap:8, padding:14,
         width:'100%', background: isDM ? 'rgba(200,169,81,0.06)' : 'var(--c-surface)',
         border: `1px solid ${isDM ? 'var(--c-border-gold)' : 'var(--c-border)'}`,
-        cursor:'pointer', textAlign:'left',
       }}>
-      <span style={{ fontSize:'1.6rem' }}>{isDM ? '🐉' : '🎲'}</span>
-      <div style={{ flex:1 }}>
-        <div style={{ fontFamily:'var(--font-display)', fontSize:'0.95rem', color:'var(--c-gold)' }}>
-          {session.name}
+      <button onClick={() => onOpen(session)}
+        style={{ display:'flex', alignItems:'center', gap:12, flex:1, background:'none', border:'none', cursor:'pointer', textAlign:'left', padding:0, color:'var(--c-text)' }}>
+        <span style={{ fontSize:'1.6rem' }}>{isDM ? '🐉' : '🎲'}</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:'var(--font-display)', fontSize:'0.95rem', color:'var(--c-gold)' }}>
+            {session.name}
+          </div>
+          <div style={{ fontSize:'0.7rem', color:'var(--c-text-dim)' }}>
+            {isDM ? 'You are the DM' : 'Player'} · Code: <span style={{ fontFamily:'var(--font-mono)' }}>{session.join_code}</span>
+          </div>
         </div>
-        <div style={{ fontSize:'0.7rem', color:'var(--c-text-dim)' }}>
-          {isDM ? 'You are the DM' : 'Player'} · Code: <span style={{ fontFamily:'var(--font-mono)' }}>{session.join_code}</span>
+      </button>
+      {isDM
+        ? <button className="btn btn-ghost btn-icon" onClick={() => onDelete(session)}
+            style={{ color:'var(--c-red-bright)', flexShrink:0 }} title="Delete session">🗑</button>
+        : <span style={{ color:'var(--c-gold)', fontSize:'1.2rem' }}>›</span>
+      }
+    </div>
+  );
+}
+
+// ── Delete confirmation modal ─────────────────────────────────────────────────
+function DeleteSessionModal({ session, onConfirm, onClose }) {
+  return (
+    <div style={{
+      position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', zIndex:300,
+      display:'flex', alignItems:'center', justifyContent:'center', padding:16,
+    }} onClick={onClose}>
+      <div style={{
+        background:'var(--c-surface)', borderRadius:'var(--radius-md)',
+        width:'100%', maxWidth:380, padding:18, display:'flex', flexDirection:'column', gap:14,
+        border:'1px solid var(--c-red)',
+      }} onClick={e=>e.stopPropagation()}>
+        <h3 style={{ color:'var(--c-red-bright)' }}>Delete Session?</h3>
+        <p style={{ fontSize:'0.88rem', color:'var(--c-text-dim)', lineHeight:1.5 }}>
+          This permanently deletes <strong style={{ color:'var(--c-gold)' }}>{session.name}</strong> and removes all players from it.
+          Their characters are not deleted — only their membership in this session. This can\'t be undone.
+        </p>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-ghost" style={{ flex:1 }} onClick={onClose}>Cancel</button>
+          <button className="btn btn-danger" style={{ flex:1 }} onClick={() => onConfirm(session)}>
+            🗑 Delete
+          </button>
         </div>
       </div>
-      <span style={{ color:'var(--c-gold)', fontSize:'1.2rem' }}>›</span>
-    </button>
+    </div>
   );
 }
 
@@ -181,7 +214,7 @@ export default function SessionsScreen() {
     user, profile, mySessions, mySessionsLoading, loadMySessions,
     createNewSession, findSessionByCode, joinSessionWithCharacter,
     createNewCharacter, openCharacter, myCharacters, loadMyCharacters,
-    setScreen, setActiveTab, activeSession,
+    setScreen, setActiveTab, activeSession, removeSession,
   } = useStore();
 
   const [showCreate, setShowCreate] = useState(false);
@@ -189,6 +222,7 @@ export default function SessionsScreen() {
   const [joinError, setJoinError] = useState('');
   const [pendingJoinSession, setPendingJoinSession] = useState(null); // session found by code, awaiting char pick
   const [showCharPicker, setShowCharPicker] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -291,7 +325,7 @@ export default function SessionsScreen() {
       )}
 
       {mySessions.map(session => (
-        <SessionCard key={session.id} session={session} isDM={session.dm_user_id === user.id} onOpen={handleOpenSession} />
+        <SessionCard key={session.id} session={session} isDM={session.dm_user_id === user.id} onOpen={handleOpenSession} onDelete={setSessionToDelete} />
       ))}
 
       {/* Modals */}
@@ -302,6 +336,13 @@ export default function SessionsScreen() {
           onPick={handlePickCharacter}
           onCreateNew={handleCreateNewForSession}
           onClose={() => { setShowCharPicker(false); setPendingJoinSession(null); }}
+        />
+      )}
+      {sessionToDelete && (
+        <DeleteSessionModal
+          session={sessionToDelete}
+          onClose={() => setSessionToDelete(null)}
+          onConfirm={async (s) => { await removeSession(s.id); setSessionToDelete(null); }}
         />
       )}
     </div>
