@@ -6,7 +6,7 @@ import {
   getAllCustomSpells, getAllCustomWeapons, saveCustomWeapon, deleteCustomWeapon,
   getMyProfile, getAllProfiles,
   createSession, getMySessions, getSessionByJoinCode,
-  joinSession, leaveSession, getSessionMembers,
+  joinSession, leaveSession, getSessionMembers, deleteSession,
   subscribeToSessionMembers, subscribeToSessionCharacters,
   requestDMAccess, getMyDMRequest, getPendingDMRequests, resolveDMRequest,
 } from '../lib/supabase';
@@ -252,6 +252,14 @@ export const useStore = create((set, get) => ({
 
   leaveActiveSession: async (sessionId, characterId) => {
     return await leaveSession(sessionId, characterId);
+  },
+
+  removeSession: async (sessionId) => {
+    const { error } = await deleteSession(sessionId);
+    if (!error) {
+      set(state => ({ mySessions: state.mySessions.filter(s => s.id !== sessionId) }));
+    }
+    return { error };
   },
 
   // ── Party (DM view, scoped to active session) ────────────────────────────────
