@@ -2,7 +2,7 @@
 .app { display: flex; flex-direction: column; height: 100%; }
 .page-content {
   flex: 1; overflow-y: auto; overflow-x: hidden;
-  padding-bottom: calc(64px + var(--safe-bottom));
+  padding-bottom: 64px;
   padding-top: var(--safe-top);
 }
 
