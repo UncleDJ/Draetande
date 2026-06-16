@@ -122,23 +122,63 @@ function JoinCodeModal({ onJoin, onClose, error }) {
 
 // ── DM Requests panel ──────────────────────────────────────────────────────────
 function DMRequestsPanel() {
-  const { pendingDMRequests, loadPendingDMRequests, resolveRequest } = useStore();
-  useEffect(() => { loadPendingDMRequests(); }, []);
-  if (pendingDMRequests.length === 0) return null;
+  const { pendingDMRequests, loadPendingDMRequests, resolveRequest,
+          approvedDMs, loadApprovedDMs, revokeDM, user } = useStore();
+
+  useEffect(() => {
+    loadPendingDMRequests();
+    loadApprovedDMs();
+  }, []);
+
+  const hasPending = pendingDMRequests.length > 0;
+  const hasApproved = approvedDMs.filter(d => d.user_id !== user?.id).length > 0;
+
+  if (!hasPending && !hasApproved) return null;
+
   return (
-    <div className="card" style={{ border:'1px solid var(--c-border-gold)' }}>
-      <div className="section-header">⚜ Pending DM Requests</div>
-      <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:8 }}>
-        {pendingDMRequests.map(req => (
-          <div key={req.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontSize:'0.9rem' }}>{req.profiles?.player_name || 'Unknown player'}</span>
-            <div style={{ display:'flex', gap:6 }}>
-              <button className="btn btn-primary btn-sm" onClick={() => resolveRequest(req.id, req.user_id, true)}>✓ Approve</button>
-              <button className="btn btn-ghost btn-sm" onClick={() => resolveRequest(req.id, req.user_id, false)}>✕ Deny</button>
-            </div>
+    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      {hasPending && (
+        <div className="card" style={{ border:'1px solid var(--c-border-gold)' }}>
+          <div className="section-header">⚜ Pending DM Requests</div>
+          <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {pendingDMRequests.map(req => (
+              <div key={req.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                <span style={{ fontSize:'0.9rem' }}>{req.profiles?.player_name || 'Unknown player'}</span>
+                <div style={{ display:'flex', gap:6 }}>
+                  <button className="btn btn-primary btn-sm"
+                    onClick={() => resolveRequest(req.id, req.user_id, true)}>
+                    ✓ Approve
+                  </button>
+                  <button className="btn btn-ghost btn-sm"
+                    onClick={() => resolveRequest(req.id, req.user_id, false)}>
+                    ✕ Deny
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {hasApproved && (
+        <div className="card" style={{ border:'1px solid var(--c-border)' }}>
+          <div className="section-header">🐉 Approved DMs</div>
+          <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {approvedDMs
+              .filter(d => d.user_id !== user?.id)
+              .map(dm => (
+                <div key={dm.user_id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <span style={{ fontSize:'0.9rem' }}>{dm.player_name || 'Unknown'}</span>
+                  <button className="btn btn-danger btn-sm"
+                    onClick={() => revokeDM(dm.user_id)}>
+                    Revoke
+                  </button>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      )}
     </div>
   );
 }
