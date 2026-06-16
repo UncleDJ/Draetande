@@ -120,23 +120,48 @@ function JoinCodeModal({ onJoin, onClose, error }) {
   );
 }
 
-// ── DM Requests panel ──────────────────────────────────────────────────────────
+// ── DM Requests + Approved DMs management panel ─────────────────────────────
 function DMRequestsPanel() {
   const { pendingDMRequests, loadPendingDMRequests, resolveRequest,
           approvedDMs, loadApprovedDMs, revokeDM, user } = useStore();
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     loadPendingDMRequests();
     loadApprovedDMs();
   }, []);
 
+  const handleApprove = async (req) => {
+    setErrorMsg('');
+    const { error } = await resolveRequest(req.id, req.user_id, true);
+    if (error) setErrorMsg(`Approve failed: ${error.message || JSON.stringify(error)}`);
+  };
+
+  const handleDeny = async (req) => {
+    setErrorMsg('');
+    const { error } = await resolveRequest(req.id, req.user_id, false);
+    if (error) setErrorMsg(`Deny failed: ${error.message || JSON.stringify(error)}`);
+  };
+
+  const handleRevoke = async (userId) => {
+    setErrorMsg('');
+    const { error } = await revokeDM(userId);
+    if (error) setErrorMsg(`Revoke failed: ${error.message || JSON.stringify(error)}`);
+  };
+
   const hasPending = pendingDMRequests.length > 0;
   const hasApproved = approvedDMs.filter(d => d.user_id !== user?.id).length > 0;
 
-  if (!hasPending && !hasApproved) return null;
+  if (!hasPending && !hasApproved && !errorMsg) return null;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+      {errorMsg && (
+        <div className="badge badge-red" style={{ width:'100%', padding:'8px 12px', fontSize:'0.7rem' }}>
+          {errorMsg}
+        </div>
+      )}
+
       {hasPending && (
         <div className="card" style={{ border:'1px solid var(--c-border-gold)' }}>
           <div className="section-header">⚜ Pending DM Requests</div>
@@ -145,14 +170,8 @@ function DMRequestsPanel() {
               <div key={req.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <span style={{ fontSize:'0.9rem' }}>{req.profiles?.player_name || 'Unknown player'}</span>
                 <div style={{ display:'flex', gap:6 }}>
-                  <button className="btn btn-primary btn-sm"
-                    onClick={() => resolveRequest(req.id, req.user_id, true)}>
-                    ✓ Approve
-                  </button>
-                  <button className="btn btn-ghost btn-sm"
-                    onClick={() => resolveRequest(req.id, req.user_id, false)}>
-                    ✕ Deny
-                  </button>
+                  <button className="btn btn-primary btn-sm" onClick={() => handleApprove(req)}>✓ Approve</button>
+                  <button className="btn btn-ghost btn-sm" onClick={() => handleDeny(req)}>✕ Deny</button>
                 </div>
               </div>
             ))}
@@ -169,10 +188,7 @@ function DMRequestsPanel() {
               .map(dm => (
                 <div key={dm.user_id} style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                   <span style={{ fontSize:'0.9rem' }}>{dm.player_name || 'Unknown'}</span>
-                  <button className="btn btn-danger btn-sm"
-                    onClick={() => revokeDM(dm.user_id)}>
-                    Revoke
-                  </button>
+                  <button className="btn btn-danger btn-sm" onClick={() => handleRevoke(dm.user_id)}>Revoke</button>
                 </div>
               ))
             }
