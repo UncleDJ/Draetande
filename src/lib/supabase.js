@@ -301,3 +301,19 @@ export async function deleteCustomSpell(spellId) {
     .eq('id', spellId);
   return { error };
 }
+
+export async function revokeDMAccess(userId) {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_approved_dm: false })
+    .eq('user_id', userId);
+  return { error };
+}
+
+export async function getApprovedDMs() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, player_name')
+    .eq('is_approved_dm', true);
+  return { data, error };
+}
