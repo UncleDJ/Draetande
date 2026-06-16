@@ -237,9 +237,24 @@ export async function getMyDMRequest(userId) {
 export async function getPendingDMRequests() {
   const { data, error } = await supabase
     .from('dm_requests')
-    .select('*, profiles(player_name)')
+    .select('*')
     .eq('status', 'pending');
-  return { data, error };
+  if (error || !data) return { data, error };
+
+  // Fetch player names separately
+  const userIds = data.map(r => r.user_id);
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('user_id, player_name')
+    .in('user_id', userIds);
+
+  const profileMap = Object.fromEntries((profiles || []).map(p => [p.user_id, p]));
+  const enriched = data.map(r => ({
+    ...r,
+    profiles: profileMap[r.user_id] || { player_name: 'Unknown' },
+  }));
+
+  return { data: enriched, error: null };
 }
 
 export async function resolveDMRequest(requestId, userId, approve) {
