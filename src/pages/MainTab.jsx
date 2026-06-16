@@ -3,6 +3,9 @@ import { useStore } from '../store/useStore';
 import { CLASSES, RACES, ALIGNMENTS, BACKGROUNDS, DEITIES, SKILLS,
          getMod, fmtMod, getProfBonus, getClassResources, COINS } from '../data/gameData';
 import { WEAPON_PROFICIENCIES, ARMOR_PROFICIENCIES, TOOL_PROFICIENCIES, LANGUAGES } from '../data/weaponsData';
+import { SUBCLASS_DETAILS } from '../data/subclassDetails';
+import { RACE_DETAILS } from '../data/raceDetails';
+import { BACKGROUND_DETAILS } from '../data/backgroundDetails';
 import { MultiSelect } from '../components/SearchSelect';
 import { AttackRow } from '../components/AttackRow';
 
@@ -258,6 +261,49 @@ function SavingThrowsPanel({ char, scores, profBonus, toggleSave }) {
   );
 }
 
+function RaceBackgroundTraits({ char }) {
+  const race = RACE_DETAILS[char.race];
+  const bg = BACKGROUND_DETAILS[char.background];
+  if (!race && !bg) return null;
+
+  return (
+    <div className="card">
+      <div className="section-header">🧬 Race & Background Traits</div>
+      <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        {race && (
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+              <span style={{ fontFamily:'var(--font-display)', fontSize:'0.85rem', color:'var(--c-gold)' }}>{char.race}</span>
+              <a href={race.link} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize:'0.6rem', color:'var(--c-gold-dim)' }}>full text ↗</a>
+            </div>
+            {race.traits.map((t,i) => (
+              <div key={i} style={{ padding:'4px 0', borderBottom: i<race.traits.length-1?'1px solid var(--c-border)':'none' }}>
+                <span style={{ fontSize:'0.85rem', color:'var(--c-text)' }}>{t.name}: </span>
+                <span style={{ fontSize:'0.82rem', color:'var(--c-text-dim)' }}>{t.summary}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {bg && (
+          <div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
+              <span style={{ fontFamily:'var(--font-display)', fontSize:'0.85rem', color:'var(--c-gold)' }}>{char.background}</span>
+              <a href={bg.link} target="_blank" rel="noopener noreferrer"
+                style={{ fontSize:'0.6rem', color:'var(--c-gold-dim)' }}>full text ↗</a>
+            </div>
+            <div style={{ fontSize:'0.78rem', color:'var(--c-text-muted)', marginBottom:4 }}>Skill proficiencies: {bg.skills}</div>
+            <div style={{ padding:'4px 0' }}>
+              <span style={{ fontSize:'0.85rem', color:'var(--c-text)' }}>{bg.feature.name}: </span>
+              <span style={{ fontSize:'0.82rem', color:'var(--c-text-dim)' }}>{bg.feature.summary}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProficienciesSection({ char }) {
   const { setField } = useStore();
   return (
@@ -439,6 +485,14 @@ export default function MainTab() {
               {DEITIES.map(d=><option key={d}>{d}</option>)}
             </select>
           </Field>
+          {SUBCLASS_DETAILS[char.class_name] && (
+            <Field label="Subclass" style={{ marginTop:10 }}>
+              <select value={char.subclass||''} onChange={e=>setField('subclass',e.target.value)}>
+                <option value="">— Choose —</option>
+                {Object.keys(SUBCLASS_DETAILS[char.class_name]).map(sc=><option key={sc}>{sc}</option>)}
+              </select>
+            </Field>
+          )}
           <div className="grid-2">
             {!char.hide_xp && (
               <Field label="Experience">
@@ -451,6 +505,9 @@ export default function MainTab() {
           </div>
         </div>
       </div>
+
+      {/* ── Race & Background Traits ── */}
+      <RaceBackgroundTraits char={char} />
 
       {/* ── Combat quick stats ── */}
       <div className="card">

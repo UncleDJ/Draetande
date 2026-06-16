@@ -3,6 +3,7 @@ import { useStore } from '../store/useStore';
 import { CLASSES, CLASS_FEATURES, getSpellSlots, getProfBonus,
          getMod, fmtMod, XP_THRESHOLDS } from '../data/gameData';
 import { FEATURE_DETAILS } from '../data/featureDetails';
+import { SUBCLASS_DETAILS } from '../data/subclassDetails';
 
 function DiceRoller({ hd, conMod, onConfirm }) {
   const [rolled, setRolled] = useState(null);
@@ -95,59 +96,83 @@ function ManualHP({ hd, conMod, onConfirm }) {
   );
 }
 
-function FeatureDetailsList({ className, maxLevel }) {
+function FeatureDetailsList({ className, subclass, maxLevel }) {
   const [expanded, setExpanded] = useState({});
   const data = FEATURE_DETAILS[className];
   if (!data) return null;
 
   const feats = data.features.filter(f => f.level <= maxLevel);
-  if (feats.length === 0) return null;
 
-  const byLevel = {};
-  feats.forEach(f => { (byLevel[f.level] = byLevel[f.level] || []).push(f); });
-  const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
+  // Subclass features (if a subclass is selected and we have data for it)
+  const subData = subclass && SUBCLASS_DETAILS[className]?.[subclass];
+  const subFeats = subData ? subData.features.filter(f => f.level <= maxLevel) : [];
+
+  if (feats.length === 0 && subFeats.length === 0) return null;
+
+  const renderGrouped = (list, sourceLink) => {
+    const byLevel = {};
+    list.forEach(f => { (byLevel[f.level] = byLevel[f.level] || []).push(f); });
+    const levels = Object.keys(byLevel).map(Number).sort((a,b)=>a-b);
+    return levels.map(lvl => (
+      <div key={lvl}>
+        <div style={{ fontSize:'0.6rem', fontFamily:'var(--font-display)', letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--c-gold-dim)', margin:'6px 0 2px' }}>
+          Level {lvl}
+        </div>
+        {byLevel[lvl].map((f, i) => {
+          const key = `${sourceLink}-${lvl}-${i}`;
+          const open = expanded[key];
+          return (
+            <div key={key} style={{ borderBottom:'1px solid var(--c-border)' }}>
+              <button onClick={()=>setExpanded(e=>({...e,[key]:!e[key]}))}
+                style={{ display:'flex', alignItems:'center', gap:8, width:'100%', textAlign:'left',
+                         background:'none', border:'none', padding:'8px 0', cursor:'pointer', color:'var(--c-text)' }}>
+                <span style={{ color:'var(--c-gold)', flexShrink:0, fontSize:'0.7rem' }}>{open ? '▼' : '▸'}</span>
+                <span style={{ flex:1, fontSize:'0.9rem' }}>{f.name}</span>
+              </button>
+              {open && (
+                <div style={{ padding:'0 0 10px 22px', fontSize:'0.82rem', color:'var(--c-text-dim)', lineHeight:1.5 }}>
+                  {f.summary}
+                  <a href={f.link} target="_blank" rel="noopener noreferrer"
+                    style={{ display:'inline-block', marginTop:4, color:'var(--c-gold)', fontSize:'0.75rem' }}>
+                    Read full rules ↗
+                  </a>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    ));
+  };
 
   return (
-    <div className="card">
-      <div className="section-header">📖 {className} Feature Details
-        <a href={data.base} target="_blank" rel="noopener noreferrer"
-          style={{ marginLeft:'auto', fontSize:'0.6rem', color:'var(--c-gold-dim)', fontFamily:'var(--font-body)', textTransform:'none', letterSpacing:0 }}>
-          full text ↗
-        </a>
+    <>
+      <div className="card">
+        <div className="section-header">📖 {className} Feature Details
+          <a href={data.base} target="_blank" rel="noopener noreferrer"
+            style={{ marginLeft:'auto', fontSize:'0.6rem', color:'var(--c-gold-dim)', fontFamily:'var(--font-body)', textTransform:'none', letterSpacing:0 }}>
+            full text ↗
+          </a>
+        </div>
+        <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {renderGrouped(feats, 'base')}
+        </div>
       </div>
-      <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        {levels.map(lvl => (
-          <div key={lvl}>
-            <div style={{ fontSize:'0.6rem', fontFamily:'var(--font-display)', letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--c-gold-dim)', margin:'6px 0 2px' }}>
-              Level {lvl}
-            </div>
-            {byLevel[lvl].map((f, i) => {
-              const key = `${lvl}-${i}`;
-              const open = expanded[key];
-              return (
-                <div key={key} style={{ borderBottom:'1px solid var(--c-border)' }}>
-                  <button onClick={()=>setExpanded(e=>({...e,[key]:!e[key]}))}
-                    style={{ display:'flex', alignItems:'center', gap:8, width:'100%', textAlign:'left',
-                             background:'none', border:'none', padding:'8px 0', cursor:'pointer', color:'var(--c-text)' }}>
-                    <span style={{ color:'var(--c-gold)', flexShrink:0, fontSize:'0.7rem' }}>{open ? '▼' : '▸'}</span>
-                    <span style={{ flex:1, fontSize:'0.9rem' }}>{f.name}</span>
-                  </button>
-                  {open && (
-                    <div style={{ padding:'0 0 10px 22px', fontSize:'0.82rem', color:'var(--c-text-dim)', lineHeight:1.5 }}>
-                      {f.summary}
-                      <a href={f.link} target="_blank" rel="noopener noreferrer"
-                        style={{ display:'inline-block', marginTop:4, color:'var(--c-gold)', fontSize:'0.75rem' }}>
-                        Read full rules ↗
-                      </a>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+
+      {subFeats.length > 0 && (
+        <div className="card" style={{ border:'1px solid var(--c-border-gold)' }}>
+          <div className="section-header">⭐ {subclass}
+            <a href={subData.link} target="_blank" rel="noopener noreferrer"
+              style={{ marginLeft:'auto', fontSize:'0.6rem', color:'var(--c-gold-dim)', fontFamily:'var(--font-body)', textTransform:'none', letterSpacing:0 }}>
+              full text ↗
+            </a>
           </div>
-        ))}
-      </div>
-    </div>
+          <div className="card-body" style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {renderGrouped(subFeats, 'sub')}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -252,7 +277,7 @@ export default function LevelUpTab() {
       </div>
 
       {/* Detailed feature reference for this class up to current level */}
-      <FeatureDetailsList className={char.class_name} maxLevel={currentLevel} />
+      <FeatureDetailsList className={char.class_name} subclass={char.subclass} maxLevel={currentLevel} />
 
       {/* Level up button */}
       {nextLevel <= 20 && (
