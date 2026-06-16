@@ -216,10 +216,15 @@ export async function getSessionMembers(sessionId) {
 
 // ── DM Requests ──────────────────────────────────────────────────────────────
 export async function requestDMAccess(userId) {
+  // Delete any existing request first, then create fresh
+  await supabase
+    .from('dm_requests')
+    .delete()
+    .eq('user_id', userId);
+
   const { data, error } = await supabase
     .from('dm_requests')
-    .upsert({ user_id: userId, status: 'pending', resolved_at: null },
-            { onConflict: 'user_id' })
+    .insert({ user_id: userId, status: 'pending' })
     .select()
     .single();
   return { data, error };
